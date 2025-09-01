@@ -32,7 +32,7 @@ A cozy and aesthetic mobile journaling app built with React Native and Expo, des
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/journal-app.git
+   git clone https://github.com/KeybordKat/journal-app.git
    cd journal-app
    ```
 
