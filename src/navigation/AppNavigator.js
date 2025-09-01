@@ -56,7 +56,7 @@ const AppNavigator = () => {
         })}
       >
         <Tab.Screen 
-          name=\"Today\" 
+          name="Today" 
           component={HomeScreen}
           options={{ 
             title: 'Today',
@@ -64,7 +64,7 @@ const AppNavigator = () => {
           }} 
         />
         <Tab.Screen 
-          name=\"History\" 
+          name="History" 
           component={HistoryScreen}
           options={{ 
             title: 'History',
@@ -72,7 +72,7 @@ const AppNavigator = () => {
           }} 
         />
         <Tab.Screen 
-          name=\"Stats\" 
+          name="Stats" 
           component={StatsScreen}
           options={{ 
             title: 'Stats',
@@ -80,7 +80,7 @@ const AppNavigator = () => {
           }} 
         />
         <Tab.Screen 
-          name=\"Settings\" 
+          name="Settings" 
           component={SettingsScreen}
           options={{ 
             title: 'Settings',

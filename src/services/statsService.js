@@ -173,4 +173,214 @@ export class StatsService {
       return [];
     }
   }
+  
+  // New comprehensive dashboard stats method
+  static async getDashboardStats() {
+    try {
+      const now = new Date();
+      const [weeklyStats, monthlyStats, yearlyStats, overallStats] = await Promise.all([
+        this.getWeeklyStats(now),
+        this.getMonthlyStats(now),
+        this.getYearlyStats(now),
+        this.getOverallStats()
+      ]);
+      
+      return {
+        current: {
+          streak: weeklyStats.streak,
+          weeklyCompletionRate: weeklyStats.completionRate,
+          monthlyCompletionRate: monthlyStats.completionRate,
+          yearlyCompletionRate: yearlyStats.completionRate,
+        },
+        overview: {
+          totalEntries: overallStats.totalEntries,
+          totalGoalsCompleted: overallStats.totalGoalsCompleted,
+          averageCompletionRate: overallStats.averageCompletionRate,
+          longestStreak: overallStats.longestStreak,
+        },
+        recent: {
+          thisWeek: {
+            entries: weeklyStats.totalEntries,
+            goalsCompleted: weeklyStats.totalGoalsCompleted,
+            completionRate: weeklyStats.completionRate,
+          },
+          thisMonth: {
+            entries: monthlyStats.totalEntries,
+            goalsCompleted: monthlyStats.totalGoalsCompleted,
+            completionRate: monthlyStats.completionRate,
+          },
+        },
+        trends: await this.getTrendData(),
+      };
+    } catch (error) {
+      console.error('Error getting dashboard stats:', error);
+      throw error;
+    }
+  }
+  
+  // Get overall lifetime statistics
+  static async getOverallStats() {
+    try {
+      const db = await getDatabase();
+      
+      const result = await db.getFirstAsync(
+        `SELECT 
+          COUNT(*) as totalEntries,
+          SUM(goals_completed) as totalGoalsCompleted,
+          AVG(CASE WHEN goals_completed > 0 THEN goals_completed * 100.0 / (
+            json_array_length(goals)
+          ) ELSE 0 END) as averageCompletionRate
+        FROM journal_entries`
+      );
+      
+      const longestStreak = await this.getLongestStreak();
+      
+      return {
+        totalEntries: result.totalEntries || 0,
+        totalGoalsCompleted: result.totalGoalsCompleted || 0,
+        averageCompletionRate: Math.round(result.averageCompletionRate || 0),
+        longestStreak,
+      };
+    } catch (error) {
+      console.error('Error getting overall stats:', error);
+      return {
+        totalEntries: 0,
+        totalGoalsCompleted: 0,
+        averageCompletionRate: 0,
+        longestStreak: 0,
+      };
+    }
+  }
+  
+  // Calculate the longest streak ever achieved
+  static async getLongestStreak() {
+    try {
+      const db = await getDatabase();
+      
+      // Get all dates with entries, ordered by date
+      const results = await db.getAllAsync(
+        'SELECT date FROM journal_entries ORDER BY date ASC'
+      );
+      
+      if (results.length === 0) return 0;
+      
+      let longestStreak = 1;
+      let currentStreak = 1;
+      let previousDate = new Date(results[0].date);
+      
+      for (let i = 1; i < results.length; i++) {
+        const currentDate = new Date(results[i].date);
+        const daysDiff = Math.floor((currentDate - previousDate) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff === 1) {
+          currentStreak++;
+          longestStreak = Math.max(longestStreak, currentStreak);
+        } else {
+          currentStreak = 1;
+        }
+        
+        previousDate = currentDate;
+      }
+      
+      return longestStreak;
+    } catch (error) {
+      console.error('Error calculating longest streak:', error);
+      return 0;
+    }
+  }
+  
+  // Get trend data for the last 7 days
+  static async getTrendData() {
+    try {
+      const trends = [];
+      const today = new Date();
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = subDays(today, i);
+        const dateString = format(date, 'yyyy-MM-dd');
+        
+        const db = await getDatabase();
+        const result = await db.getFirstAsync(
+          'SELECT goals_completed, goals FROM journal_entries WHERE date = ?',
+          [dateString]
+        );
+        
+        if (result) {
+          const goals = JSON.parse(result.goals);
+          const completionRate = goals.length > 0 ? Math.round((result.goals_completed / goals.length) * 100) : 0;
+          
+          trends.push({
+            date: dateString,
+            dayName: format(date, 'EEE'),
+            hasEntry: true,
+            goalsCompleted: result.goals_completed,
+            completionRate,
+          });
+        } else {
+          trends.push({
+            date: dateString,
+            dayName: format(date, 'EEE'),
+            hasEntry: false,
+            goalsCompleted: 0,
+            completionRate: 0,
+          });
+        }
+      }
+      
+      return trends;
+    } catch (error) {
+      console.error('Error getting trend data:', error);
+      return [];
+    }
+  }
+  
+  // Get section completion stats (affirmations, gratitude)
+  static async getSectionCompletionStats() {
+    try {
+      const db = await getDatabase();
+      
+      const results = await db.getAllAsync(
+        'SELECT affirmations, gratitude, goals FROM journal_entries'
+      );
+      
+      let affirmationsCount = 0;
+      let gratitudeCount = 0;
+      let goalsCount = 0;
+      let totalEntries = results.length;
+      
+      results.forEach(entry => {
+        const affirmations = JSON.parse(entry.affirmations || '[]');
+        const gratitude = JSON.parse(entry.gratitude || '[]');
+        const goals = JSON.parse(entry.goals || '[]');
+        
+        if (affirmations.some(item => item.trim() !== '')) affirmationsCount++;
+        if (gratitude.some(item => item.trim() !== '')) gratitudeCount++;
+        if (goals.some(goal => goal.text && goal.text.trim() !== '')) goalsCount++;
+      });
+      
+      return {
+        affirmations: {
+          completedEntries: affirmationsCount,
+          completionRate: totalEntries > 0 ? Math.round((affirmationsCount / totalEntries) * 100) : 0,
+        },
+        gratitude: {
+          completedEntries: gratitudeCount,
+          completionRate: totalEntries > 0 ? Math.round((gratitudeCount / totalEntries) * 100) : 0,
+        },
+        goals: {
+          completedEntries: goalsCount,
+          completionRate: totalEntries > 0 ? Math.round((goalsCount / totalEntries) * 100) : 0,
+        },
+        totalEntries,
+      };
+    } catch (error) {
+      console.error('Error getting section completion stats:', error);
+      return {
+        affirmations: { completedEntries: 0, completionRate: 0 },
+        gratitude: { completedEntries: 0, completionRate: 0 },
+        goals: { completedEntries: 0, completionRate: 0 },
+        totalEntries: 0,
+      };
+    }
+  }
 }

@@ -70,6 +70,26 @@ const journalReducer = (state, action) => {
         hasUnsavedChanges: true,
       };
     
+    case ActionTypes.UPDATE_AFFIRMATIONS:
+      return {
+        ...state,
+        currentEntry: {
+          ...state.currentEntry,
+          affirmations: action.payload,
+        },
+        hasUnsavedChanges: true,
+      };
+    
+    case ActionTypes.UPDATE_GRATITUDE:
+      return {
+        ...state,
+        currentEntry: {
+          ...state.currentEntry,
+          gratitude: action.payload,
+        },
+        hasUnsavedChanges: true,
+      };
+    
     case ActionTypes.TOGGLE_GOAL_COMPLETION:
       const updatedGoals = state.currentEntry.goals.map((goal, index) => 
         index === action.payload 
@@ -83,6 +103,12 @@ const journalReducer = (state, action) => {
           goals: updatedGoals,
         },
         hasUnsavedChanges: true,
+      };
+    
+    case ActionTypes.SET_UNSAVED_CHANGES:
+      return {
+        ...state,
+        hasUnsavedChanges: action.payload,
       };
     
     default:
@@ -152,6 +178,14 @@ export const JournalProvider = ({ children }) => {
     dispatch({ type: ActionTypes.TOGGLE_GOAL_COMPLETION, payload: index });
   };
 
+  const updateAffirmations = (affirmations) => {
+    dispatch({ type: ActionTypes.UPDATE_AFFIRMATIONS, payload: affirmations });
+  };
+
+  const updateGratitude = (gratitude) => {
+    dispatch({ type: ActionTypes.UPDATE_GRATITUDE, payload: gratitude });
+  };
+
   // Load entry when selected date changes
   useEffect(() => {
     if (state.selectedDate) {
@@ -165,6 +199,8 @@ export const JournalProvider = ({ children }) => {
     saveEntry,
     updateGoals,
     toggleGoalCompletion,
+    updateAffirmations,
+    updateGratitude,
   };
 
   return (

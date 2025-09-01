@@ -1,3 +1,3 @@
 // Statistics components
-export { default as StatsCard } from './StatsCard';
-export { default as ProgressChart } from './ProgressChart';
+export { default as StatsCard, StreakCard, CompletionRateCard } from './StatsCard';
+export { TrendChart, ProgressBar, SectionBreakdown, WeeklyOverview } from './ProgressChart';

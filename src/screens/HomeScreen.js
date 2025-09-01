@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, Alert, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { useJournal } from '../context/JournalContext';
 import GoalsSection from '../components/journal/GoalsSection';
-import TextSection from '../components/journal/TextSection';
+import TextInputSection from '../components/journal/TextInputSection';
 import { globalStyles, theme } from '../styles';
 
 const HomeScreen = () => {
@@ -15,6 +15,8 @@ const HomeScreen = () => {
     hasUnsavedChanges,
     updateGoals, 
     toggleGoalCompletion,
+    updateAffirmations,
+    updateGratitude,
     saveEntry 
   } = useJournal();
 
@@ -27,13 +29,6 @@ const HomeScreen = () => {
     }
   };
 
-  const updateAffirmations = (affirmations) => {
-    // For now, we'll just implement goals. We can add affirmations and gratitude later.
-  };
-
-  const updateGratitude = (gratitude) => {
-    // For now, we'll just implement goals. We can add affirmations and gratitude later.
-  };
 
   if (!currentEntry) {
     return (
@@ -47,11 +42,15 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={globalStyles.safeArea}>
-      <ScrollView 
-        style={globalStyles.container}
-        contentContainerStyle={globalStyles.paddingMd}
-        showsVerticalScrollIndicator={false}
-      >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }}>
+          <ScrollView 
+            style={globalStyles.container}
+            contentContainerStyle={globalStyles.paddingMd}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            onScrollBeginDrag={Keyboard.dismiss}
+          >
         {/* Date Header */}
         <View style={styles.dateHeader}>
           <Text style={styles.dateText}>
@@ -71,17 +70,27 @@ const HomeScreen = () => {
           onToggleGoalCompletion={toggleGoalCompletion}
         />
 
-        {/* Affirmations Section - Placeholder for now */}
-        <View style={styles.placeholder}>
-          <Text style={globalStyles.cardTitle}>Daily Affirmations</Text>
-          <Text style={globalStyles.secondaryText}>Coming soon...</Text>
-        </View>
+        {/* Affirmations Section */}
+        <TextInputSection
+          title="Daily Affirmations"
+          items={currentEntry.affirmations || ['', '', '']}
+          onUpdateItems={updateAffirmations}
+          placeholder="Write a positive affirmation..."
+          color={theme.colors.affirmations}
+          icon="sparkles"
+          numInputs={3}
+        />
 
-        {/* Gratitude Section - Placeholder for now */}
-        <View style={styles.placeholder}>
-          <Text style={globalStyles.cardTitle}>Gratitude</Text>
-          <Text style={globalStyles.secondaryText}>Coming soon...</Text>
-        </View>
+        {/* Gratitude Section */}
+        <TextInputSection
+          title="Gratitude"
+          items={currentEntry.gratitude || ['', '', '']}
+          onUpdateItems={updateGratitude}
+          placeholder="Something you're grateful for..."
+          color={theme.colors.gratitude}
+          icon="heart"
+          numInputs={3}
+        />
 
         {/* Save Button */}
         <TouchableOpacity
@@ -102,7 +111,9 @@ const HomeScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.bottomSpacing} />
-      </ScrollView>
+          </ScrollView>
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
@@ -128,14 +139,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.fontSize.xl,
     color: theme.colors.primary,
     fontWeight: 'bold',
-  },
-  placeholder: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-    alignItems: 'center',
-    ...theme.shadows.sm,
   },
   saveButton: {
     marginTop: theme.spacing.lg,
