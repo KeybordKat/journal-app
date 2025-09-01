@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { JournalService } from '../services/journalService';
-import { format } from 'date-fns';
+import { format, addDays, subDays } from 'date-fns';
 
 // Initial state
 const initialState = {
@@ -105,6 +105,12 @@ const journalReducer = (state, action) => {
         hasUnsavedChanges: true,
       };
     
+    case ActionTypes.SET_SELECTED_DATE:
+      return {
+        ...state,
+        selectedDate: action.payload,
+      };
+    
     case ActionTypes.SET_UNSAVED_CHANGES:
       return {
         ...state,
@@ -186,6 +192,48 @@ export const JournalProvider = ({ children }) => {
     dispatch({ type: ActionTypes.UPDATE_GRATITUDE, payload: gratitude });
   };
 
+  // Date navigation functions
+  const setSelectedDate = (date) => {
+    dispatch({ type: ActionTypes.SET_SELECTED_DATE, payload: date });
+  };
+
+  const goToPreviousDay = () => {
+    const previousDay = subDays(state.selectedDate, 1);
+    dispatch({ type: ActionTypes.SET_SELECTED_DATE, payload: previousDay });
+  };
+
+  const goToNextDay = () => {
+    const nextDay = addDays(state.selectedDate, 1);
+    dispatch({ type: ActionTypes.SET_SELECTED_DATE, payload: nextDay });
+  };
+
+  const goToToday = () => {
+    const today = new Date();
+    dispatch({ type: ActionTypes.SET_SELECTED_DATE, payload: today });
+  };
+
+  // Auto-save before changing dates if there are unsaved changes
+  const changeDate = async (newDate) => {
+    if (state.hasUnsavedChanges) {
+      await saveEntry();
+    }
+    setSelectedDate(newDate);
+  };
+
+  const changeToPreviousDay = async () => {
+    if (state.hasUnsavedChanges) {
+      await saveEntry();
+    }
+    goToPreviousDay();
+  };
+
+  const changeToNextDay = async () => {
+    if (state.hasUnsavedChanges) {
+      await saveEntry();
+    }
+    goToNextDay();
+  };
+
   // Load entry when selected date changes
   useEffect(() => {
     if (state.selectedDate) {
@@ -201,6 +249,14 @@ export const JournalProvider = ({ children }) => {
     toggleGoalCompletion,
     updateAffirmations,
     updateGratitude,
+    // Date navigation
+    setSelectedDate,
+    changeDate,
+    goToPreviousDay,
+    goToNextDay,
+    goToToday,
+    changeToPreviousDay,
+    changeToNextDay,
   };
 
   return (

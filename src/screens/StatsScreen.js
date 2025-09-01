@@ -70,11 +70,11 @@ const StatsScreen = () => {
           
           <View style={{ flex: 1, marginLeft: theme.spacing.sm }}>
             <StatsCard
-              title="Goals Completed"
+              title="Goals Done"
               value={stats.overview.totalGoalsCompleted}
               icon="checkmark-circle"
               color={theme.colors.goals}
-              subtitle="total goals"
+              subtitle="completed"
               loading={loading}
             />
           </View>

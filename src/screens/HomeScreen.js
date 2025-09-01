@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TouchableWithoutFeedback, StyleSheet, Alert, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { format } from 'date-fns';
+import { Ionicons } from '@expo/vector-icons';
+import { format, isToday } from 'date-fns';
 import { useJournal } from '../context/JournalContext';
 import GoalsSection from '../components/journal/GoalsSection';
 import TextInputSection from '../components/journal/TextInputSection';
+import { DatePicker } from '../components/common';
 import { globalStyles, theme } from '../styles';
 
 const HomeScreen = () => {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
   const { 
     currentEntry, 
     selectedDate, 
@@ -17,7 +21,11 @@ const HomeScreen = () => {
     toggleGoalCompletion,
     updateAffirmations,
     updateGratitude,
-    saveEntry 
+    saveEntry,
+    changeToPreviousDay,
+    changeToNextDay,
+    goToToday,
+    changeDate
   } = useJournal();
 
   const handleSave = async () => {
@@ -27,6 +35,11 @@ const HomeScreen = () => {
     } else {
       Alert.alert('Error', 'Failed to save your entry. Please try again.');
     }
+  };
+
+  const handleDatePickerSelect = async (date) => {
+    await changeDate(date);
+    setShowDatePicker(false);
   };
 
 
@@ -42,25 +55,53 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={globalStyles.safeArea}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }}>
-          <ScrollView 
-            style={globalStyles.container}
-            contentContainerStyle={globalStyles.paddingMd}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            onScrollBeginDrag={Keyboard.dismiss}
-          >
+      <ScrollView 
+        style={globalStyles.container}
+        contentContainerStyle={globalStyles.paddingMd}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        onScrollBeginDrag={Keyboard.dismiss}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View>
         {/* Date Header */}
         <View style={styles.dateHeader}>
-          <Text style={styles.dateText}>
-            {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-          </Text>
-          {hasUnsavedChanges && (
-            <View style={styles.unsavedIndicator}>
-              <Text style={styles.unsavedText}>•</Text>
-            </View>
-          )}
+          <TouchableOpacity 
+            onPress={changeToPreviousDay}
+            style={styles.navButton}
+          >
+            <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+          
+          <View style={styles.dateContainer}>
+            <TouchableOpacity 
+              onPress={() => setShowDatePicker(true)}
+              style={styles.dateButton}
+            >
+              <Text style={styles.dateText}>
+                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+              </Text>
+              <Text style={styles.dateHint}>Tap to change date</Text>
+              <Ionicons 
+                name="calendar-outline" 
+                size={16} 
+                color={theme.colors.primary} 
+                style={styles.calendarIcon}
+              />
+            </TouchableOpacity>
+            {hasUnsavedChanges && (
+              <View style={styles.unsavedIndicator}>
+                <Text style={styles.unsavedText}>•</Text>
+              </View>
+            )}
+          </View>
+          
+          <TouchableOpacity 
+            onPress={changeToNextDay}
+            style={styles.navButton}
+          >
+            <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
         </View>
 
         {/* Goals Section */}
@@ -111,9 +152,17 @@ const HomeScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.bottomSpacing} />
-          </ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+      
+      <DatePicker
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        selectedDate={selectedDate}
+        onDateSelect={handleDatePickerSelect}
+        title="Select Date"
+      />
     </SafeAreaView>
   );
 };
@@ -122,15 +171,48 @@ const styles = StyleSheet.create({
   dateHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     marginBottom: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  navButton: {
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.surface,
+    ...theme.shadows.sm,
+  },
+  dateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+  },
+  dateButton: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
   },
   dateText: {
     fontSize: theme.typography.fontSize.xl,
     fontWeight: '600',
     color: theme.colors.text,
     textAlign: 'center',
+  },
+  dateHint: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.primary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  calendarIcon: {
+    marginTop: theme.spacing.xs,
+  },
+  todayHint: {
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.primary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
   },
   unsavedIndicator: {
     marginLeft: theme.spacing.sm,

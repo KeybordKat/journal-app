@@ -159,6 +159,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    textAlign: 'center',
+    lineHeight: theme.typography.fontSize.sm * 1.2,
   },
   content: {
     alignItems: 'flex-start',
