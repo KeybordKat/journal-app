@@ -46,12 +46,16 @@ const AppNavigator = () => {
             backgroundColor: theme.colors.background,
             elevation: 0,
             shadowOpacity: 0,
-            borderBottomWidth: 0,
+            borderBottomWidth: -10,
           },
           headerTitleStyle: {
             color: theme.colors.text,
-            fontSize: theme.typography.fontSize.xl,
+            fontSize: theme.typography.fontSize["3xl"],
             fontWeight: '600',
+          },
+          headerTitleContainerStyle: {
+            // Reduce the gap between the title and the bottom of the header
+            marginBottom: -50, // tweak between -4 and -10 as needed
           },
         })}
       >

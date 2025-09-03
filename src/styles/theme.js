@@ -1,12 +1,12 @@
 export const theme = {
   colors: {
     // Main brand colors - soft and cozy
-    primary: '#8B7B9B', // Soft purple
-    primaryLight: '#A69CAD',
-    primaryDark: '#6D5F7A',
+    primary: '#b9a28d', // Soft purple
+    primaryLight: '#EAD8C0',
+    primaryDark: '#8D7B68',
     
     // Background colors
-    background: '#FDF8F6', // Warm off-white
+    background: '#efe9e6', // Warm off-white
     surface: '#FFFFFF',
     card: '#F9F5F3', // Slightly tinted white
     
@@ -16,9 +16,9 @@ export const theme = {
     textLight: '#9A9A9A',
     
     // Accent colors for different sections
-    goals: '#7FB069', // Soft green for goals
-    affirmations: '#F4A460', // Warm orange for affirmations
-    gratitude: '#DDA0DD', // Light purple for gratitude
+    goals: '#B9A28D', // Soft green for goals
+    affirmations: '#B9A28D', // Warm orange for affirmations
+    gratitude: '#B9A28D', // Light purple for gratitude
     
     // Status colors
     success: '#81C784',
