@@ -4,6 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { globalStyles, theme } from '../styles';
 import { JournalService } from '../services/journalService';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const SettingsScreen = () => {
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -23,16 +26,75 @@ const SettingsScreen = () => {
 
             const jsonString = JSON.stringify(exportData, null, 2);
 
-            await Share.share({
-                message: 'Journal App Data Export',
-                title: 'My Journal Data',
-                url: `data:application/json;charset=utf-8,${encodeURIComponent(jsonString)}`
+            // Write to a temp file
+            const fileUri = FileSystem.cacheDirectory + 'journal_backup.json';
+            await FileSystem.writeAsStringAsync(fileUri, jsonString, {
+                encoding: FileSystem.EncodingType.UTF8,
             });
+
+            // Share the actual file
+            if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(fileUri, {
+                    mimeType: 'application/json',
+                    dialogTitle: 'Export Journal Data',
+                });
+            } else {
+                Alert.alert('Error', 'Sharing is not available on this device.');
+            }
         } catch (error) {
             console.error('Error exporting data:', error);
             Alert.alert('Export Failed', 'Could not export your data. Please try again.');
         }
     };
+
+    const handleImportData = async () => {
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: 'application/json',
+                copyToCacheDirectory: true, // ensure we get a proper file path
+            });
+
+            if (result.type === 'cancel') return;
+
+            // On newer Expo versions, result has an `assets` array
+            const fileUri = result.assets?.[0]?.uri || result.uri;
+
+            if (!fileUri) {
+                Alert.alert('Error', 'Could not access the selected file.');
+                return;
+            }
+
+            // Ensure URI works with FileSystem
+            const normalizedUri = fileUri.startsWith('file://') ? fileUri : `file://${fileUri}`;
+
+            const content = await FileSystem.readAsStringAsync(normalizedUri, {
+                encoding: FileSystem.EncodingType.UTF8,
+            });
+
+            const importedData = JSON.parse(content);
+
+            if (!importedData.entries || !Array.isArray(importedData.entries)) {
+                Alert.alert('Invalid File', 'The selected file is not a valid backup.');
+                return;
+            }
+
+            for (let entry of importedData.entries) {
+                await JournalService.createEntry(
+                    new Date(entry.date),        // convert back to Date
+                    entry.goals,
+                    entry.affirmations,
+                    entry.gratitude
+                );
+            }
+
+
+            Alert.alert('Success', 'Your data has been imported successfully.');
+        } catch (error) {
+            console.error('Error importing data:', error);
+            Alert.alert('Import Failed', 'Could not import your data. Please try again.');
+        }
+    };
+
 
     const handleClearAllData = () => {
         Alert.alert(
@@ -178,7 +240,7 @@ const SettingsScreen = () => {
                             icon: 'cloud-download',
                             title: 'Import Data',
                             subtitle: 'Restore from a previous backup',
-                            onPress: () => Alert.alert('Coming Soon', 'Data import will be available in a future update.'),
+                            onPress: handleImportData,
                             showChevron: true
                         })}
                         {renderSettingItem({
