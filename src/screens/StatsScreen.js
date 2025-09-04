@@ -165,42 +165,6 @@ const StatsScreen = () => {
         );
     };
 
-    const renderThisWeekSection = () => {
-        if (!stats || !stats.recent) return null;
-
-        return (
-            <View style={{ marginBottom: theme.spacing.lg }}>
-                <Text style={[globalStyles.subtitle, { textAlign: 'center', marginBottom: theme.spacing.md }]}>
-                    Recent Activity
-                </Text>
-
-                <View style={{ flexDirection: 'row', marginBottom: theme.spacing.md }}>
-                    <View style={{ flex: 1, marginRight: theme.spacing.sm }}>
-                        <StatsCard
-                            title="This Week"
-                            value={stats.recent.thisWeek.entries}
-                            icon="calendar"
-                            color={theme.colors.primary}
-                            subtitle={`${stats.recent.thisWeek.goalsCompleted} goals completed`}
-                            loading={loading}
-                        />
-                    </View>
-
-                    <View style={{ flex: 1, marginLeft: theme.spacing.sm }}>
-                        <StatsCard
-                            title="This Month"
-                            value={stats.recent.thisMonth.entries}
-                            icon="stats-chart"
-                            color={theme.colors.goals}
-                            subtitle={`${stats.recent.thisMonth.goalsCompleted} goals completed`}
-                            loading={loading}
-                        />
-                    </View>
-                </View>
-            </View>
-        );
-    };
-
     return (
         <SafeAreaView style={globalStyles.safeArea}>
             <ScrollView
@@ -219,7 +183,6 @@ const StatsScreen = () => {
                 {renderCompletionSection()}
                 {renderSectionBreakdown()}
                 {renderTrendsSection()}
-                {renderThisWeekSection()}
 
                 <View style={{ height: theme.spacing.xl }} />
             </ScrollView>

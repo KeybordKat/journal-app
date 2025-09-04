@@ -110,7 +110,7 @@ export const globalStyles = StyleSheet.create({
   
   // Section styles
   section: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.xs,
   },
   
   sectionHeader: {

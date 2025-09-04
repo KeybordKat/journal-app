@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     color: theme.colors.surface,
   },
   bottomSpacing: {
-    height: theme.spacing.xl,
+    height: theme.spacing.xs,
   },
 });
 
